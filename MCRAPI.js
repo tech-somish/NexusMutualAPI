@@ -17,8 +17,8 @@ var getVersion = require('./getVesionABI.js').getVersion;
 var urlMongo = process.env.mongodbSever;
 var MongoClient = require('mongodb').MongoClient;
 
-const KOVAN_ENDPOINT = process.env.EndPoint;
-var web3 = new Web3(new Web3.providers.HttpProvider(KOVAN_ENDPOINT));
+const WEB3_ENDPOINT = process.env.EndPoint;
+var web3 = new Web3(new Web3.providers.HttpProvider(WEB3_ENDPOINT));
 const fields = ['address'];
 var allCurrencies = [];
 var allRates = [];
@@ -33,12 +33,12 @@ var totalOriginalRisk = 0;
 var MCR_PER = 0;
 var vFull = 0;
 var mcrETH = 0;
+var minCap=7000;
 var NXMasterAbi = [{"constant":true,"inputs":[],"name":"pauseTime","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"contractsActive","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_toCheck","type":"address"}],"name":"isAuthorizedToGovern","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"emergencyPaused","outputs":[{"name":"pause","type":"bool"},{"name":"time","type":"uint256"},{"name":"by","type":"bytes4"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"tokenAddress","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"masterAddress","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[{"name":"_tokenAdd","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"constant":false,"inputs":[{"name":"_contractsName","type":"bytes2"},{"name":"_contractsAddress","type":"address"}],"name":"upgradeContractImplementation","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"myid","type":"bytes32"}],"name":"delegateCallBack","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"code","type":"bytes8"}],"name":"getAddressParameters","outputs":[{"name":"codeVal","type":"bytes8"},{"name":"val","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"code","type":"bytes8"}],"name":"getOwnerParameters","outputs":[{"name":"codeVal","type":"bytes8"},{"name":"val","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_pause","type":"bool"},{"name":"_by","type":"bytes4"}],"name":"addEmergencyPause","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_time","type":"uint256"}],"name":"updatePauseTime","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"masterInitialized","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getPauseTime","outputs":[{"name":"_time","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_contractsName","type":"bytes2"},{"name":"_contractsAddress","type":"address"}],"name":"upgradeContract","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"_add","type":"address"}],"name":"isInternal","outputs":[{"name":"check","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_add","type":"address"}],"name":"isOwner","outputs":[{"name":"check","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"isPause","outputs":[{"name":"check","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_add","type":"address"}],"name":"isMember","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"index","type":"uint256"}],"name":"getEmergencyPauseByIndex","outputs":[{"name":"_index","type":"uint256"},{"name":"_pause","type":"bool"},{"name":"_time","type":"uint256"},{"name":"_by","type":"bytes4"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getEmergencyPausedLength","outputs":[{"name":"len","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getLastEmergencyPause","outputs":[{"name":"_pause","type":"bool"},{"name":"_time","type":"uint256"},{"name":"_by","type":"bytes4"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_masterAddress","type":"address"}],"name":"changeMasterAddress","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getVersionData","outputs":[{"name":"contractsName","type":"bytes2[]"},{"name":"contractsAddress","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"dAppLocker","outputs":[{"name":"_add","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"dAppToken","outputs":[{"name":"_add","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"_contractName","type":"bytes2"}],"name":"getLatestAddress","outputs":[{"name":"contractAddress","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_contractAddresses","type":"address[]"}],"name":"addNewVersion","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"_add","type":"address"}],"name":"checkIsAuthToGoverned","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"startEmergencyPause","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"code","type":"bytes8"},{"name":"val","type":"address"}],"name":"updateAddressParameters","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"code","type":"bytes8"},{"name":"val","type":"address"}],"name":"updateOwnerParameters","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}];
 var NXMasterAddress = process.env.NXMasterAddress;
 NXMasterContract = web3.eth.contract(NXMasterAbi);
 NXMasterInstance = NXMasterContract.at(NXMasterAddress);
 var allContractAddress = [];
-var dBResultDistinctAdd=[];
 
 // all helmet configuration comes here
 app.use(helmet.frameguard({ action: 'deny' }));
@@ -54,6 +54,7 @@ app.use(helmet.dnsPrefetchControl());
 app.disable('x-powered-by');
 
 var daiAbi = [{constant:false,inputs:[{name:'owner_',type:'address'}],name:'setOwner',outputs:[],payable:false,stateMutability:'nonpayable',type:'function'},{constant:false,inputs:[],name:'poke',outputs:[],payable:false,stateMutability:'nonpayable',type:'function'},{constant:true,inputs:[],name:'compute',outputs:[{name:'',type:'bytes32'},{name:'',type:'bool'}],payable:false,stateMutability:'view',type:'function'},{constant:false,inputs:[{name:'wat',type:'address'}],name:'set',outputs:[],payable:false,stateMutability:'nonpayable',type:'function'},{constant:false,inputs:[{name:'wat',type:'address'}],name:'unset',outputs:[],payable:false,stateMutability:'nonpayable',type:'function'},{constant:true,inputs:[{name:'',type:'address'}],name:'indexes',outputs:[{name:'',type:'bytes12'}],payable:false,stateMutability:'view',type:'function'},{constant:true,inputs:[],name:'next',outputs:[{name:'',type:'bytes12'}],payable:false,stateMutability:'view',type:'function'},{constant:true,inputs:[],name:'read',outputs:[{name:'',type:'bytes32'}],payable:false,stateMutability:'view',type:'function'},{constant:true,inputs:[],name:'peek',outputs:[{name:'',type:'bytes32'},{name:'',type:'bool'}],payable:false,stateMutability:'view',type:'function'},{constant:true,inputs:[{name:'',type:'bytes12'}],name:'values',outputs:[{name:'',type:'address'}],payable:false,stateMutability:'view',type:'function'},{constant:false,inputs:[{name:'min_',type:'uint96'}],name:'setMin',outputs:[],payable:false,stateMutability:'nonpayable',type:'function'},{constant:false,inputs:[{name:'authority_',type:'address'}],name:'setAuthority',outputs:[],payable:false,stateMutability:'nonpayable',type:'function'},{constant:true,inputs:[],name:'owner',outputs:[{name:'',type:'address'}],payable:false,stateMutability:'view',type:'function'},{constant:false,inputs:[],name:'void',outputs:[],payable:false,stateMutability:'nonpayable',type:'function'},{constant:true,inputs:[],name:'has',outputs:[{name:'',type:'bool'}],payable:false,stateMutability:'view',type:'function'},{constant:false,inputs:[{name:'pos',type:'bytes12'},{name:'wat',type:'address'}],name:'set',outputs:[],payable:false,stateMutability:'nonpayable',type:'function'},{constant:true,inputs:[],name:'authority',outputs:[{name:'',type:'address'}],payable:false,stateMutability:'view',type:'function'},{constant:false,inputs:[{name:'pos',type:'bytes12'}],name:'unset',outputs:[],payable:false,stateMutability:'nonpayable',type:'function'},{constant:false,inputs:[{name:'next_',type:'bytes12'}],name:'setNext',outputs:[],payable:false,stateMutability:'nonpayable',type:'function'},{constant:true,inputs:[],name:'min',outputs:[{name:'',type:'uint96'}],payable:false,stateMutability:'view',type:'function'},{anonymous:false,inputs:[{indexed:false,name:'val',type:'bytes32'}],name:'LogValue',type:'event'},{anonymous:true,inputs:[{indexed:true,name:'sig',type:'bytes4'},{indexed:true,name:'guy',type:'address'},{indexed:true,name:'foo',type:'bytes32'},{indexed:true,name:'bar',type:'bytes32'},{indexed:false,name:'wad',type:'uint256'},{indexed:false,name:'fax',type:'bytes'}],name:'LogNote',type:'event'},{anonymous:false,inputs:[{indexed:true,name:'authority',type:'address'}],name:'LogSetAuthority',type:'event'},{anonymous:false,inputs:[{indexed:true,name:'owner',type:'address'}],name:'LogSetOwner',type:'event'}];
+
 daiContractAddress = process.env.daiFeedAddress;
 daiContract = web3.eth.contract(daiAbi);
 daiInstance = daiContract.at(daiContractAddress);
@@ -80,7 +81,7 @@ app.get('/MCRAPI/:Version', function(req, res) {
       .length(2)
   };
   const { error, value } = Joi.validate({ a: Version }, versionSchema);
-  if (error !== null) {
+  if (error != null) {
     res.send('NOTOK');
   } else {
     staticStressMatrix = {};
@@ -108,12 +109,11 @@ app.get('/MCRAPI/:Version', function(req, res) {
     totalOriginalRisk = 0;
     web3 = new Web3();
     web3.setProvider(
-      new Web3.providers.HttpProvider(KOVAN_ENDPOINT)
+      new Web3.providers.HttpProvider(WEB3_ENDPOINT)
     );
 
 
     getVersion(function(errData, data) {
-      // res.send(data);
       abiData = JSON.parse(data);
       if (abiData.length != 0) {
         var filteredAbi = getABiFiltered_sign('pool1');
@@ -155,7 +155,7 @@ app.get('/MCRAPI/:Version', function(req, res) {
         }
         getDistinctScAdd(res);
       } else {
-        res.send('NOTOK');
+        res.send('NOTOkkK');
       }
     });
   }
@@ -169,7 +169,7 @@ app.get('/allDistinctSCAdd/:Version', function(req, res) {
       .length(2)
   };
   const { error, value } = Joi.validate({ a: Version }, versionSchema);
-  if (error !== null) {
+  if (error != null) {
     res.send('NOTOK');
   } else {
     getAllDistCons(function(err,dBResultDistinctAdd)
@@ -198,7 +198,7 @@ app.get('/allCoverDetails/:Version', function(req, res) {
       .length(2)
   };
   const { error, value } = Joi.validate({ a: Version }, versionSchema);
-  if (error !== null) {
+  if (error != null) {
     res.send('NOTOK');
   } else {
     getAllCoverData(function(errData,coverData){
@@ -248,7 +248,7 @@ function getDistinctScAdd(res) {
   var client = new Client();
   client.registerMethod('jsonMethod', urlDistinctAdd, 'GET');
   client.methods.jsonMethod(function(data, response) {
-  	dBResultDistinctAdd = data;
+    dBResultDistinctAdd = data;
     getStressUpDown(res);
   });
 }
@@ -319,26 +319,30 @@ function getAllCoverDetails(res) {
         dBResultAllCover[i].sumAssured *
         staticStressMatrix[dBResultAllCover[i].curr].daiStressDown;
       sumAssuaredData.push(obj);
+
     }
   
+    console.log("sumAssuaredData",sumAssuaredData);
+    // var urlComputeCoRel = 'http://localhost:4401/computeCoRel';
+    // var clientComputeCoRel = new Client();
+    // clientComputeCoRel.registerMethod('jsonMethod', urlComputeCoRel, 'GET');
+    // clientComputeCoRel.methods.jsonMethod(function(data1, response1) {
+    //   var fileName = data1;
 
-    var urlComputeCoRel = 'http://localhost:4401/computeCoRel';
-    var clientComputeCoRel = new Client();
-    clientComputeCoRel.registerMethod('jsonMethod', urlComputeCoRel, 'GET');
-    clientComputeCoRel.methods.jsonMethod(function(data1, response1) {
-      var fileName = data1;
-
-      if (fileName === 9999) {
-        res.send('MCR failed');
-      } else {
-        computeCoRelMatrix(res, fileName['name']);
-      }
-    });
+    //   if (fileName === 9999) {
+    //     res.send('MCR failed');
+    //   } else {
+        // computeCoRelMatrix(res, fileName['name']);
+        computeCoRelMatrix(res, "");
+    //   }
+    // });
   }
   else
   {
     poolDataInstance.minCap( function(error1, result1) {
       if(!error1){
+        result1 = result1 * 1e21;
+        console.log("MIN CAP" + result1);
         MCRCap['baseSA'] = result1/1e18;
         MCRCap['saETHStressUp'] = result1/1e18;
         MCRCap['saETHStressDown'] = result1/1e18;
@@ -359,12 +363,29 @@ function getAllCoverDetails(res) {
 /// @dev generating matrix which consist of co-realation values for all possible pairs of covers.
 /// @param fileName name of file that genarated by R code.
 function computeCoRelMatrix(res, fileName) {
-  var urlReadCoRel = 'http://localhost:4401/readCoRel/' + fileName;
-  var clientComputeCoRel = new Client();
-  clientComputeCoRel.registerMethod('jsonMethod', urlReadCoRel, 'GET');
-  clientComputeCoRel.methods.jsonMethod(function(data, response) {
-    var cosineMatrix = data;
+  // var urlReadCoRel = 'http://localhost:4401/readCoRel/' + fileName;
+  // var clientComputeCoRel = new Client();
+  // clientComputeCoRel.registerMethod('jsonMethod', urlReadCoRel, 'GET');
+  // clientComputeCoRel.methods.jsonMethod(function(data, response) {
+    // var cosineMatrix = data;
+    var cosineMatrix={};
+    for(var k =0;k<dBResultDistinctAdd.length;k++)
+    {
+      for(var ik=0;ik<dBResultDistinctAdd.length;ik++)
+      {
 
+        var value = 0.5;
+        if(dBResultDistinctAdd[k].address==dBResultDistinctAdd[ik].address){
+          value = 1;
+        }
+        if(cosineMatrix[dBResultDistinctAdd[k].address]==undefined)
+          cosineMatrix[dBResultDistinctAdd[k].address] = {};
+        cosineMatrix[dBResultDistinctAdd[k].address][ik] = {};
+        cosineMatrix[dBResultDistinctAdd[k].address][ik]["address"] = dBResultDistinctAdd[ik].address;
+        cosineMatrix[dBResultDistinctAdd[k].address][ik]["values"] = value;
+
+      }
+    }
     for (var i = 0; i < dBResultDistinctAdd.length; i++) {
       disAddMapping[
         cosineMatrix[dBResultDistinctAdd[0].address][i].address
@@ -380,8 +401,9 @@ function computeCoRelMatrix(res, fileName) {
       }
       coRel.push(obj);
     }
+    console.log("coRel",coRel);
     getSumassuredPairs(res);
-  });
+  // });
 }
 var baseSAPairs = [];
 var saETHStressUpPairs = [];
@@ -418,6 +440,11 @@ function getSumassuredPairs(res) {
     saETHStressDownPairs.push(objETHStressDown);
     saCAStressUpPairs.push(objDAIStressUp);
     saCAStressDownPairs.push(objDAIStressDown);
+    // console.log("baseSAPairs",baseSAPairs);
+    // console.log("saETHStressUpPairs",saETHStressUpPairs);
+    // console.log("saETHStressDownPairs",saETHStressDownPairs);
+    // console.log("saCAStressUpPairs",saCAStressUpPairs);
+    // console.log("saCAStressDownPairs",saCAStressDownPairs);
   }
 
   getMCRCapital(res);
@@ -446,15 +473,16 @@ function getMCRCapital(res) {
       MCRCap['saCAStressDown'] += saCAStressDownPairs[i][j] * coRel[i][j];
     }
   }
-  MCRCap['baseSA'] = Math.sqrt(MCRCap['baseSA']) * mcrReductionFactor;
+  MCRCap['baseSA'] = Math.max(Math.sqrt(MCRCap['baseSA']) * mcrReductionFactor,minCap);
   MCRCap['saETHStressUp'] =
-    Math.sqrt(MCRCap['saETHStressUp']) * mcrReductionFactor;
+    Math.max(Math.sqrt(MCRCap['saETHStressUp']) * mcrReductionFactor,minCap);
   MCRCap['saETHStressDown'] =
-    Math.sqrt(MCRCap['saETHStressDown']) * mcrReductionFactor;
+    Math.max(Math.sqrt(MCRCap['saETHStressDown']) * mcrReductionFactor,minCap);
   MCRCap['saCAStressUp'] =
-    Math.sqrt(MCRCap['saCAStressUp']) * mcrReductionFactor;
+    Math.max(Math.sqrt(MCRCap['saCAStressUp']) * mcrReductionFactor,minCap);
   MCRCap['saCAStressDown'] =
-    Math.sqrt(MCRCap['saCAStressDown']) * mcrReductionFactor;
+    Math.max(Math.sqrt(MCRCap['saCAStressDown']) * mcrReductionFactor,minCap);
+   console.log("MCRCap",MCRCap); 
   getMCRScenario(res);
 }
 
@@ -539,7 +567,8 @@ function getMCRScenario(res) {
             MCRScenario['CapitalisationRatio'].daiStressUP,
             MCRScenario['CapitalisationRatio'].daiStressDown
           );
-          // res.send(MCRScenario);
+
+          console.log("MCRScenario",MCRScenario);
           vFull = MCRScenario['PoolFund'].baseCaseEth;
           mcrETH = (vFull / MCR_PER) * 100;
           MCR_PER *= 10000;
@@ -552,7 +581,6 @@ function getMCRScenario(res) {
           console.log('mcrETH', mcrETH);
           console.log(allRates);
           console.log(allCurrencies);
-          // console.log(mcrContractAddress);
           var datePosted = formatDate(new Date());
           console.log(datePosted);
           var mcrData = {};
@@ -596,7 +624,7 @@ function getABiFiltered_sign(name) {
 
 async function getAllDistCons(callback){
   var collectionName = process.env.smartCoverDetailsCollectionName;
-  var version = process.env.version;
+  var version = "M1"; // process.env.version;
   MongoClient.connect(urlMongo,{useNewUrlParser: true }, function(err, db) {
     if (err) throw err;
     var dbo = db.db(process.env.dbName);
@@ -621,7 +649,7 @@ async function getAllDistCons(callback){
 async function getAllCoverData(callback)
 {
   var collectionName = process.env.smartCoverDetailsCollectionName;
-  var version = process.env.version;
+  var version = "M1"; // process.env.version;
   MongoClient.connect(urlMongo,{useNewUrlParser: true }, function(err, db) {
     if (err) throw err;
     var dbo = db.db(process.env.dbName);

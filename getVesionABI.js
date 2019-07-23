@@ -7,7 +7,7 @@ var MongoClient = require('mongodb').MongoClient;
 
 async function getVersion(callback){
 	var collectionName = process.env.versionABIsCollectionName;
-	var version = process.env.version;
+	var version = "M1";
 	console.log("collectionName "+collectionName);
 	console.log("version "+version);
 	MongoClient.connect(url,{useNewUrlParser:true},function(err,db){

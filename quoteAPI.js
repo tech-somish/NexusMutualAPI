@@ -32,10 +32,10 @@ app.use(helmet.dnsPrefetchControl());
 app.disable('x-powered-by');
 
 var _ = require("lodash");
-const KOVAN_ENDPOINT=process.env.EndPoint;
+const WEB3_ENDPOINT=process.env.EndPoint;
 const wallet = require('eth-lightwallet').keystore ;
 const wallet1 = require('eth-lightwallet') ;
-var web3=new Web3(new Web3.providers.HttpProvider(KOVAN_ENDPOINT));
+var web3=new Web3(new Web3.providers.HttpProvider(WEB3_ENDPOINT));
 var BN = require("bn.js");
 var ethABI = require("ethereumjs-abi");
 
@@ -59,6 +59,7 @@ var minCorel = 0.85;
 var daysAvgEth=30;  //Eth balance Avg for what number of days
 var avgTxPerDay=5760; //avg transaction per day
 var expireTimeForRequestedCover=3600; //In seconds
+var _password=process.env.metaMaskPassword; //Password for metamask for signature of coverdetails
 var count = [];
 var url = process.env.mongodbSever;
 
@@ -86,8 +87,7 @@ app.get('/SmartCASign/:coverAmount/:coverCurr/:coverPeriod/:smartCA/:Version', f
   var Version;
 
 
-  
-  web3.setProvider(new Web3.providers.HttpProvider(KOVAN_ENDPOINT));
+  web3=new Web3(new Web3.providers.HttpProvider(WEB3_ENDPOINT));
 
   contr=req.params.smartCA.toString();
   SA=req.params.coverAmount.toString();
@@ -116,7 +116,6 @@ app.get('/SmartCASign/:coverAmount/:coverCurr/:coverPeriod/:smartCA/:Version', f
     if(data != undefined)
     {
       abiData = JSON.parse(data);
-      // setAllAddresses(abiData);
        web3.eth.contract(NXMasterAbi).at(NXMasterAddress, function (errorNXM, nxmasterInstance) {
       if (!errorNXM) {
               nxmasterInstance.getVersionData(function(errAddr,resAddr){
@@ -155,7 +154,7 @@ app.get('/SmartCASign/:coverAmount/:coverCurr/:coverPeriod/:smartCA/:Version', f
                   STL = productDetails[2]/100;
                   coverperiod = productDetails[0]/1;
                   var capReached = poolDataInstance.capReached();
-                  if(capReached == 0)
+                  if(capReached != 1)
                     res.end(JSON.stringify({reason:"minCapNotReached", coverAmount:0}));
                   else
                   {
@@ -172,7 +171,8 @@ app.get('/SmartCASign/:coverAmount/:coverCurr/:coverPeriod/:smartCA/:Version', f
                 }
                 }
                 else{
-                  console.log("Error in getVersionData");
+                  console.log(errAddr);
+                  res.end("Error in getVersionData");
                 }
               }.bind(this));
       }
@@ -470,52 +470,106 @@ function callIScontract(data,res,stakedNXM,distContract,CP,SA,totalGas,reqNum,re
 	}
 }
 
+// function getBalanceETH_sign(Add,res,stakedNXM,CP,SA,curr,result,avgRate,tokenPriceCurr,Version)
+// {
+//   var sum=0;
+//   var blockno1 = 0;
+//   web3 = new Web3(new Web3.providers.HttpProvider(process.env.MainnetEndPoint));
+//     blockno1=web3.eth.blockNumber;
+    
+//     for(var i=blockno1,c=0;i>=0&&c<daysAvgEth;i=i-avgTxPerDay,c++)
+//     {
+      
+//      console.log(Add,i); 
+//      web3.eth.getBalance(Add,i,function(error1,result1)
+//      {
+//       if(typeof(parseFloat(result1))=="number" )
+//       {
+        
+//         if(typeof(parseFloat(result1))=="number" ){
+//           c--; 
+          
+//           sum+=parseFloat(result1)/1000000000000000000;  
+//           console.log("Balance Day" + i + " " + result1);
+//         }
+      
+//       else{
+//         c--;
+//         sum+=0; 
+//       }
+//       if(c==0)
+//       {  
+//         var DeployDate = Number(result.timeStamp);
+//         result.BalanceETH=sum/daysAvgEth;
+//         if(Math.ceil(Number(ConstDate-DeployDate)/Number(3600*24))<daysAvgEth)
+//           result.BalanceETH=result.BalanceETH/daysAvgEth*Math.ceil(Number(ConstDate-DeployDate)/Number(3600*24));
+
+// 		console.log("result---> ",result);
+// 	        RiskCost_sign(res,stakedNXM,CP,SA,curr,Add,result,avgRate,tokenPriceCurr,Version);
+//       }
+
+//       }
+//       else
+//       {
+//         res.end(error1);
+//       }
+//      });
+ 
+ 
+//     }
+// }
 function getBalanceETH_sign(Add,res,stakedNXM,CP,SA,curr,result,avgRate,tokenPriceCurr,Version)
 {
-  var sum=0;
-  var blockno1 = 0;
-  web3 = new Web3(new Web3.providers.HttpProvider(process.env.MainnetEndPoint));
-    blockno1=web3.eth.blockNumber;
-    
-    for(var i=blockno1,c=0;i>=0&&c<daysAvgEth;i=i-avgTxPerDay,c++)
+ var sum=0;
+ var blockno1 = 0;
+ web3 = new Web3(new Web3.providers.HttpProvider(process.env.MainnetEndPoint));
+   blockno1=web3.eth.blockNumber;
+
+   for(var i=blockno1,c=0;i>=0&&c<daysAvgEth;i=i-avgTxPerDay,c++)
+   {
+
+    var url = "https://blockscout.com/eth/mainnet/api?module=account&action=eth_get_balance&address="+Add+"&block="+i;
+    var client = new Client();
+      client.registerMethod("jsonMethod", url, "GET");
+      client.methods.jsonMethod( function (result1, response)
     {
-      
-      
-     web3.eth.getBalance(Add,i,function(error1,result1)
+        if(result1.error==undefined)
+            result1 = result1.result*1;
+        else
+            result1 = 0;
+
+     if(typeof(parseFloat(result1))=="number" )
      {
-      if(typeof(parseFloat(result1))=="number" )
-      {
-        
-        if(typeof(parseFloat(result1))=="number" ){
-          c--; 
-          
-          sum+=parseFloat(result1)/1000000000000000000;  
-        }
-      
-      else{
-        c--;
-        sum+=0; 
-      }
-      if(c==0)
-      {  
-        var DeployDate = Number(result.timeStamp);
-        result.BalanceETH=sum/daysAvgEth;
-        if(Math.ceil(Number(ConstDate-DeployDate)/Number(3600*24))<daysAvgEth)
-          result.BalanceETH=result.BalanceETH/daysAvgEth*Math.ceil(Number(ConstDate-DeployDate)/Number(3600*24));
-        RiskCost_sign(res,stakedNXM,CP,SA,curr,Add,result,avgRate,tokenPriceCurr,Version);
-      }
 
-      }
-      else
-      {
-        res.end(error1);
-      }
-     });
- 
- 
-    }
+       if(typeof(parseFloat(result1))=="number" ){
+         c--;
+
+         sum+=parseFloat(result1)/1000000000000000000;
+       }
+
+     else{
+       c--;
+       sum+=0;
+     }
+     if(c==0)
+     {
+       var DeployDate = Number(result.timeStamp);
+       result.BalanceETH=sum/daysAvgEth;
+       if(Math.ceil(Number(ConstDate-DeployDate)/Number(3600*24))<daysAvgEth)
+         result.BalanceETH=result.BalanceETH/daysAvgEth*Math.ceil(Number(ConstDate-DeployDate)/Number(3600*24));
+       RiskCost_sign(res,stakedNXM,CP,SA,curr,Add,result,avgRate,tokenPriceCurr,Version);
+     }
+
+     }
+     else
+     {
+       res.end(error1);
+     }
+    });
+
+
+   }
 }
-
 function RiskCost_sign(res,stakedNXM,CP,SA,curr,contr,result,avgRate,tokenPriceCurr,Version)
 {
   var relatedContracts = [];
@@ -528,6 +582,7 @@ function RiskCost_sign(res,stakedNXM,CP,SA,curr,contr,result,avgRate,tokenPriceC
   RS.TransAdj = Number(result.TransCount)/Transactions;
   RS.ETH_HELD_ADJ=Number(result.BalanceETH)/ETH_Held;
   RS.PWS=Math.max(Math.pow(((Time_Since_Deployment_Max-(RS.DaySinceDeploy)+RS.GasAdj- RS.TransAdj - RS.ETH_HELD_ADJ)/Time_Since_Deployment_Max),5), Price_Floor);
+  console.log("RS ---- " , RS);
   if(stakedNXM==0)
   RS.RCWS=Math.max(Math.pow(((Time_Since_Deployment_Max-(RS.DaySinceDeploy)+RS.GasAdj- RS.TransAdj - RS.ETH_HELD_ADJ)/Time_Since_Deployment_Max),5), Price_Floor);
   else
@@ -551,34 +606,38 @@ function RiskCost_sign(res,stakedNXM,CP,SA,curr,contr,result,avgRate,tokenPriceC
       const json2csvParser = new Json2csvParser({ fields });
       const csv = json2csvParser.parse(dBResultDistinctAdd);
       fs.writeFileSync('Nexus_Mutual.csv', csv, 'binary');
-      runScript(contr.toLowerCase(),minCorel)
-      .then(function(fileName) {
-        if (fileName === 9999) {
-          res.end('Failed');
-        } else {
+      // runScript(contr.toLowerCase(),minCorel)
+      // .then(function(fileName) {
+        // if (fileName === 9999) {
+        //   res.end('Failed');
+        // } else {
 
-    fs.readFile(dir+fileName, function(err, data) {
-    if (err) {
-      console.log('error:', err);
-      res.end(err);
-      return;
-    } else {
-      var relatedContractsCoRel = JSON.parse(data);
-
-    for(var i=0;i<relatedContractsCoRel[contr.toLowerCase()].length;i++){
-     relatedContracts.push(relatedContractsCoRel[contr.toLowerCase()][i].address);
-    }
-  // relatedContracts = [contr];
+    // fs.readFile(dir+fileName, function(err, data) {
+    // if (err) {
+    //   console.log('error:', err);
+    //   res.end(err);
+    //   return;
+    // } else {
+    //   console.log("data ",data);
+    //   console.log("file name ",dir+fileName);
+    //   var relatedContractsCoRel = JSON.parse(data);
+    //   console.log("relatedContractsCoRel ",relatedContractsCoRel);
+    // for(var i=0;i<relatedContractsCoRel[contr.toLowerCase()].length;i++){
+    //  relatedContracts.push(relatedContractsCoRel[contr.toLowerCase()][i].address);
+    // }
+  	relatedContracts = [contr];
     getCurrencies_sign(res,stakedNXM,RS,QD,SA,contr,CP,relatedContracts,avgRate,tokenPriceCurr);
-    }
-  });
-        };
-      })
-      .catch(console.error());
+    // }
+  // });
+        // };
+      // })
+      // .catch(console.error());
     }
     }
     else
-      console.log(errorSC);
+      {console.log(errorSC);
+  	  res.end("Error in Risk cost");
+  	}
 
   });
       
@@ -588,7 +647,6 @@ function RiskCost_sign(res,stakedNXM,CP,SA,curr,contr,result,avgRate,tokenPriceC
 
 function getCurrencies_sign(res,stakedNXM,RS,QD,SA,contr,CP,relatedContracts,avgRate,tokenPriceCurr){
   var currencies=[];
-         
   poolDataInstance.getAllCurrencies.call(function(error1,result1){
     if(!error1)
     {
@@ -630,7 +688,9 @@ function get3daysAvg_sign(currencies,res,stakedNXM,RS,QD,index,totalSumAssured,S
 		 			get3daysAvg_sign(currencies,res,stakedNXM,RS,QD,index+1,totalSumAssured,SA,contr,CP,relatedContracts,avgRate,tokenPriceCurr);
 		 	}
 		 	else
-		 	console.error(error2);
+		 	{console.log(error2);
+		 	 res.end("Error in 3daysAvg");
+		 	}
 
 		 })
   });
@@ -693,7 +753,8 @@ function CapacityLimit_sign(res,stakedNXM,RS,QD,totalSumAssured,SA,CP,tokenPrice
 	     console.log("RS--->>>"+JSON.stringify(RS));
 
 
-       res.send(QD);
+     	 getVRS(res,QD,RS);
+
  	}  
 }
 
@@ -719,7 +780,7 @@ function getMCRData_sign(res,curr,contr,CP,SA,Version)
 	      }
 	      else
 	      {
-	        console.error(error2);
+	        console.log(error2);
 	        res.end("Error in calculateTokenPrice-->"+error2);
 	      }
 	    });                  
@@ -729,7 +790,7 @@ function getMCRData_sign(res,curr,contr,CP,SA,Version)
 	  }
 	  else
 	  {
-	    console.error(error1);
+	    console.log(error1);
 	    res.end("Error in getLastMCR-->"+error1);
 	  }
 	});
@@ -756,7 +817,7 @@ function getTokenData_sign(res,contr,CP,SA,curr,avgRate,tokenPriceCurr,Version)
     }
     else
     {
-      console.error(error1);
+      console.log(error1);
       res.end("Error in getTotalLockedNXMToken-->"+error1);
     }
   });
@@ -766,6 +827,92 @@ function getABiFiltered_sign(name,abiData)
 {
    var ans=abiData.filter(function(n){return n.contractName==name});
    return ans;
+}
+
+function getVRS(res,QD,RS)
+{
+
+	var order={amount:QD.coverAmount,curr:QD.coverCurr,CP:QD.coverPeriod,smartCA:QD.smartCA,Price:QD.coverCurrPrice,price_nxm:QD.PriceNxm,expire:QD.expireTime,generationTime:QD.generationTime,quotationContract:quotationContractAddress};
+    var orderParts = [
+           { value: bigNumberToBN(order.amount), type: "uint"},
+           { value: order.curr, type: "bytes4" },
+           { value: bigNumberToBN(order.CP), type: "uint16" },
+           { value: order.smartCA, type: "address" },
+           { value: bigNumberToBN(order.Price), type: "uint"},
+           { value: bigNumberToBN(order.price_nxm), type: "uint" },
+           { value: bigNumberToBN(order.expire), type: "uint" },
+           { value: bigNumberToBN(order.generationTime), type: "uint" },
+           { value: order.quotationContract, type: "address" },
+       ];
+        var types = _.map(orderParts, function (o) { return o.type; });
+        var values = _.map(orderParts, function (o) { return o.value; });
+        var hashBuff = ethABI.soliditySHA3(types, values);
+        var hashHex = util.bufferToHex(hashBuff);
+        
+        console.log("hashHex---->"+hashHex);
+
+
+
+
+		getKeystoreInstance(function (resultKs, errorKs)
+		{
+			if(resultKs!=null){
+				resultKs = JSON.parse(resultKs);
+
+
+	 	ks = (resultKs[0].instance);
+  	ks = wallet.deserialize(ks);
+	  // Some methods will require providing the `pwDerivedKey`,
+	  // Allowing you to only decrypt private keys on an as-needed basis.
+	  // You can generate that value with this convenient method:
+	  ks.keyFromPassword(_password, function (err, pwDerivedKey) {
+	    if (err) throw err;
+	    
+	    // generate five new address/private key pairs
+	    // the corresponding private keys are also encrypted
+	    ks.generateNewAddress(pwDerivedKey, 1);
+	    console.log("privatekey---->",ks,' ',pwDerivedKey.toString("hex"));
+	    var addr = ks.getAddresses();
+	    ks.passwordProvider = function (callback) {
+	      var pw = prompt("Please enter password", "Password");
+	      callback(null, pw);
+
+	    };
+
+	 
+	  const orderHashBuff = util.toBuffer(hashHex);
+	  const    msgHashBuff = util.hashPersonalMessage(orderHashBuff);
+	  const sig = lightwallet.signing.signMsgHash(ks, pwDerivedKey, msgHashBuff, ks.getAddresses()[0]);
+	   
+	  console.log(sig.v," ",util.toUnsigned(util.fromSigned(sig.r)).toString('hex'),"  ",util.toUnsigned(util.fromSigned(sig.s)).toString('hex'));
+
+	  const prefix = util.toBuffer("\x19Ethereum Signed Message:\n");
+	  const prefixedMsg = util.sha3(
+	  Buffer.concat([prefix, util.toBuffer(String(32)), orderHashBuff])
+	);
+	QD.v=sig.v;
+	QD.r="0x"+util.toUnsigned(util.fromSigned(sig.r)).toString('hex');
+	QD.s="0x"+util.toUnsigned(util.fromSigned(sig.s)).toString('hex');
+    console.log("QD",QD);
+	res.end(JSON.stringify(QD));
+
+	 const pubKey  = util.ecrecover(prefixedMsg,sig.v,sig.r,sig.s);
+	 const addrBuf = util.pubToAddress(pubKey);
+	 const addr1    = util.bufferToHex(addrBuf);
+
+	console.log(ks.getAddresses()[0],  addr1);
+
+
+   });
+  
+ }
+ else
+ {console.log(errorKs); 
+ res.end("Error in keystore");
+ }  // Now set ks as transaction_signer in the hooked web3 provider
+    // and you can start using web3 using the keys/addresses in ks!
+
+});
 }
 
 function bigNumberToBN (value) {
@@ -800,10 +947,35 @@ async function getAllDistinctSCAdd(version,callback){
 
 }
 
+async function getKeystoreInstance(callback){
+  var collectionName = process.env.keyStoreCollection;
+
+  console.log(collectionName);
+  MongoClient.connect(url,{useNewUrlParser: true }, function(err, db) {
+    if (err) throw err;
+    var dbo = db.db(process.env.dbName);
+
+
+        dbo.collection(collectionName).find().toArray(function(err, docs) {
+          if (docs.length > 0) {
+            db.close();
+             callback(JSON.stringify(docs),null);
+          }
+          else{
+            db.close();
+            callback(null,JSON.stringify([]));
+          }
+      });
+      
+
+  });
+  
+
+}
 
 async function getVersion(callback){
   var collectionName = process.env.versionABIsCollectionName;
-  var version = process.env.version;
+  var version = "M1";
   MongoClient.connect(url,{useNewUrlParser:true},function(err,db){
     if(!err){
       var dbo = db.db(process.env.dbName);

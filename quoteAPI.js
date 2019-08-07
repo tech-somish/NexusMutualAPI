@@ -248,7 +248,7 @@ function isContract_sign(Add,main,contract,res,stakedNXM,distContract,CP,SA,tota
       else
       {
         count[reqNum]++;
-        if (distContract.length==count[reqNum])
+        if (distContract.length==count[reqNum] || count[reqNum]==1000)
             getBalanceETH_sign(contr,res,stakedNXM,CP,SA,curr,result,avgRate,tokenPriceCurr,Version);
       }
     else
@@ -298,7 +298,7 @@ function isContract_sign(Add,main,contract,res,stakedNXM,distContract,CP,SA,tota
               result.TotalGasUsed=totalGas;
 
               count[reqNum]++;
-              if (distContract.length==count[reqNum]){
+              if (distContract.length==count[reqNum] || count[reqNum]==1000){
                 getBalanceETH_sign(contr,res,stakedNXM,CP,SA,curr,result,avgRate,tokenPriceCurr,Version);
               }
             }
@@ -312,7 +312,7 @@ function isContract_sign(Add,main,contract,res,stakedNXM,distContract,CP,SA,tota
             {
 
               count[reqNum]++;
-              if (distContract.length==count[reqNum]){
+              if (distContract.length==count[reqNum] || count[reqNum]==1000){
                   getBalanceETH_sign(contr,res,stakedNXM,CP,SA,curr,result,avgRate,tokenPriceCurr,Version);
               }
             }
@@ -327,7 +327,7 @@ function isContract_sign(Add,main,contract,res,stakedNXM,distContract,CP,SA,tota
         else
         {
           count[reqNum]++;
-          if (distContract.length==count[reqNum])
+          if (distContract.length==count[reqNum] || count[reqNum]==1000)
               getBalanceETH_sign(contr,res,stakedNXM,CP,SA,curr,result,avgRate,tokenPriceCurr,Version);
         }
       }
@@ -454,6 +454,7 @@ function callIScontract(data,res,stakedNXM,distContract,CP,SA,totalGas,reqNum,re
 	  getBalanceETH_sign(contr,res,stakedNXM,CP,SA,curr,result,avgRate,tokenPriceCurr,Version);
 	}
 	else{
+    data = data.slice(0,1000);
 	  data.forEach(function(dataItem, i){
 	  isInstance.isContract(dataItem.add,function(errorIsCon,resultIsCon){
 	    if(resultIsCon){
@@ -462,7 +463,7 @@ function callIScontract(data,res,stakedNXM,distContract,CP,SA,totalGas,reqNum,re
 	    }
 	    else {
 	      count[reqNum]++;
-	      if(count[reqNum]==distContract.length)
+	      if(count[reqNum]==distContract.length || count[reqNum]==1000)
 	        getBalanceETH_sign(contr,res,stakedNXM,CP,SA,curr,result,avgRate,tokenPriceCurr,Version);
 	    }
 	  });

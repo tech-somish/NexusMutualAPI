@@ -196,42 +196,72 @@ var contractAddresses = [];
 
 async function allowedToCoverContractCheck(contAdd,version,callback)
 {
-	var url = process.env.dynamoDBDomain + 'checkIsHacked/' + contAdd + '/' + version;
-	var client = new Client();
-	  client.registerMethod("jsonMethod", url, "GET");
-	  client.methods.jsonMethod(args, function (data, response) 
-	  {
-	  	if(data != undefined){
-	  		if(data.toString() == "false") {
-	  			
-		  		var url="https://api.etherscan.io/api?module=contract&action=getabi&address="+contAdd+"&apikey=YourApiKeyToken";
-			    var client = new Client();
-			    client.registerMethod("jsonMethod", url, "GET");
-			    client.methods.jsonMethod(function (data, response) 
-			    {
+  var url = process.env.dynamoDBDomain + 'checkIsHacked/' + contAdd + '/' + version;
+  var client = new Client();
+    client.registerMethod("jsonMethod", url, "GET");
+    client.methods.jsonMethod(args, function (data, response) 
+    {
+      if(data != undefined){
+        if(data.toString() == "false") {
+          
+          var url="https://api.etherscan.io/api?module=contract&action=getabi&address="+contAdd+"&apikey=YourApiKeyToken";
+          var client = new Client();
+          client.registerMethod("jsonMethod", url, "GET");
+          client.methods.jsonMethod(function (data, response) 
+          {
 
-			        if(data!=undefined)
-			        {
+              if(data!=undefined)
+              {
 
-			        if(data.message=="OK"){
-			          callback(null,"true");
-			        }
-			        else
-			          callback(null,"Not verified on etherscan");
+              if(data.message=="OK"){
+                var url = process.env.dynamoDBDomain+"checkIsRelated/"+contAdd+"/"+version;
+                // var url = "https://fuh4otqn6k.execute-api.eu-west-2.amazonaws.com/dev/"+"checkIsRelated/"+contAdd+"/"+version;
+                var client = new Client();
+                  client.registerMethod("jsonMethod", url, "GET");
+                  // var args1 = {
+                  //   "headers": {
+                  //       "x-api-key": "TEQWDwqZwk8rJwcEFOE4o5dYThOxH0te2ZVLbIoW",
+                  //       "cache-control": "no-cache"
+                  //   } // request headers
+                  //   };
+                  client.methods.jsonMethod(args, function (data, response) 
+                  {
+                    console.log(data," ",url);
+                    if(!data.isExists)
+                    {
+                      callback(null,"true");
+                    }
+                    else{
+                      data["reason"] = "Related";
+                      callback(null,data);
+                    }
 
-			      	}
-			      	else
-			        	callback(null,"error");
+                  });
+                
+              }
+              else{
+                data["reason"] = "Not verified on etherscan";
+                callback(null,data);
+              }
 
-			    
-			  	});
-		}
-		else
-			callback(null,"Hacked");
-	  	}
-	  	else
-	  		callback(null,"error");
-	  });
+              }
+              else
+                callback(null,"error");
+
+          
+          });
+    }
+    else if(data.toString() == "true"){
+      var jsonData={};
+      jsonData["reason"] = "Hacked";
+      callback(null,jsonData);
+    }
+    else
+      callback(null,"error");
+      }
+      else
+        callback(null,"error");
+    });
 }
 
 function isContract_sign(Add,main,contract,res,stakedNXM,distContract,CP,SA,totalGas,reqNum,result,internalTx,contr,curr,avgRate,tokenPriceCurr,Version)
@@ -786,7 +816,8 @@ function getMCRData_sign(res,curr,contr,CP,SA,Version)
 	      }
 	    });                  
 	    var _MCR=Math.round(result1.toNumber())/1e18;
-	    MCR_Per=(_MCR/10)*avgRate;
+	    capacityLimitPer = poolDataInstance.capacityLimit();
+      MCR_Per=(_MCR/capacityLimitPer)*avgRate;
 	    console.log("MCR-->"+_MCR+" MCR_per-->"+MCR_Per);
 	  }
 	  else
